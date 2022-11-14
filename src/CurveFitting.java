@@ -5,14 +5,14 @@ import java.util.Scanner;
 public class CurveFitting {
 
     Random rand = new Random();
-    private int numberOfItems;
-    private int knapsackWeight;
-    private ArrayList<Item> items;
+    private int numberOfPoints;
+    private int degree;
+    private ArrayList<Point> points;
 
-    public CurveFitting(int weight, int numberOfItems, ArrayList<Item> items) {
-        this.knapsackWeight = weight;
-        this.numberOfItems = numberOfItems;
-        this.items = items;
+    public CurveFitting(int degree, int numberOfPoints, ArrayList<Point> points) {
+        this.degree = degree;
+        this.numberOfPoints = numberOfPoints;
+        this.points = points;
     }
 
     public static void main(String[] args) {
@@ -20,101 +20,52 @@ public class CurveFitting {
         Scanner sc = new Scanner(System.in);
         int testCases = sc.nextInt();
 
-        int sizeOfKnapsack, numberOfItems, itemWeight, itemValue;
-        ArrayList<Item> items = new ArrayList<>();
+        int numberOfPoints, degree, x, y;
+        ArrayList<Point> points = new ArrayList<>();
 
         for (int i = 0; i < testCases; i++) {
 
-            sizeOfKnapsack = sc.nextInt();
-            numberOfItems = sc.nextInt();
-            for (int j = 0; j < numberOfItems; j++) {
-                itemWeight = sc.nextInt();
-                itemValue = sc.nextInt();
-                items.add(new Item(itemWeight, itemValue));
+            numberOfPoints = sc.nextInt();
+            degree = sc.nextInt();
+            for (int j = 0; j < numberOfPoints; j++) {
+                x = sc.nextInt();
+                y = sc.nextInt();
+                points.add(new Point(x, y));
             }
 
-            CurveFitting ks = new CurveFitting(sizeOfKnapsack, numberOfItems, items);
-            ks.solve();
+            CurveFitting cf = new CurveFitting(degree, numberOfPoints, points);
+            cf.solve();
 
         }
 
-    }
-
-    public int getKnapsackWeight() {
-        return knapsackWeight;
-    }
-
-    public void setKnapsackWeight(int knapsackWeight) {
-        this.knapsackWeight = knapsackWeight;
-    }
-
-    public int getNumberOfItems() {
-        return numberOfItems;
-    }
-
-    public void setNumberOfItems(int numberOfItems) {
-        this.numberOfItems = numberOfItems;
-    }
-
-    public ArrayList<Item> getItems() {
-        return items;
-    }
-
-    public void setItems(ArrayList<Item> items) {
-        this.items = items;
-    }
-
-    public void clearItems() {
-        items.clear();
-    }
-
-    public int calculateWeight(ArrayList<Integer> chromosome) {
-        int totalWeight = 0;
-        for (int i = 0; i < chromosome.size(); i++) {
-            if (chromosome.get(i) == 1)
-                totalWeight += items.get(i).getWeight();
-        }
-        return totalWeight;
-    }
-
-    public int calculateFitness(ArrayList<Integer> chromosome) {
-        int fitness = 0;
-        for (int i = 0; i < chromosome.size(); i++) {
-            if (chromosome.get(i) == 1) {
-                fitness += items.get(i).getValue();
-            }
-        }
-        return fitness;
     }
 
     private ArrayList<Chromosome> InitializePopulation(int populationSize) {
 
         ArrayList<Chromosome> totalChromosomes = new ArrayList<>(populationSize);
 
-        for (int i = 0; i < populationSize; i++) {
+        int chromosomeSize = degree + 1;
 
-            ArrayList<Integer> chromosome = new ArrayList<>(numberOfItems);
+        int rangeMin = -10;
+
+        int rangeMax = 10;
+
+        for (int i = 0; i < populationSize; i++) {
+            ArrayList<Double> chromosome = new ArrayList<>(chromosomeSize);
+
             double random;
 
-            while (true) {
-
-                for (int gene = 0; gene < numberOfItems; gene++) {
-                    random = rand.nextDouble();
-                    if (random <= 0.5)
-                        chromosome.add(0);
-                    else
-                        chromosome.add(1);
-                }
-
-                if (calculateWeight(chromosome) <= knapsackWeight) {
-                    totalChromosomes.add(new Chromosome(chromosome, calculateFitness(chromosome)));
-                    break;
-                }
-                chromosome.clear();
+            for (int gene = 0; gene < chromosomeSize; gene++) {
+                random = rangeMin + (rangeMax - rangeMin) * rand.nextDouble();
+                chromosome.add(random);
             }
-
+            totalChromosomes.add(new Chromosome(chromosome, 0));
         }
         return totalChromosomes;
+    }
+
+    private double calculateFitness(ArrayList<Double> chromosome) {
+
     }
 
     private ArrayList<Integer> calculateCumulative(ArrayList<Chromosome> chromosomes) {
@@ -168,7 +119,7 @@ public class CurveFitting {
 
         if (Rc <= Pc) {
 
-            int Xc = rand.nextInt(numberOfItems - 1) + 1;
+            int Xc = rand.nextInt(numberOfPoints - 1) + 1;
 
             for (int i = Xc; i < items.size(); i++) {
                 int temp = afterCrossover.get(0).geneAt(i);
@@ -236,7 +187,7 @@ public class CurveFitting {
 
         }
 
-        int bestFitness = Integer.MIN_VALUE;
+        double bestFitness = Integer.MIN_VALUE;
         for (Chromosome c : currentGeneration) {
             if (bestFitness < c.getFitnessValue()) {
                 bestFitness = c.getFitnessValue();
@@ -244,70 +195,62 @@ public class CurveFitting {
         }
         System.out.println(bestFitness);
 
-        clearItems();
+//        clearItems();
 
     }
 
     static class Chromosome {
 
-        private ArrayList<Integer> genes;
-        private int fitnessValue;
+        private ArrayList<Double> genes;
+        private double fitnessValue;
 
-        public Chromosome(ArrayList<Integer> genes, int fitnessValue) {
+        public Chromosome(ArrayList<Double> genes, double fitnessValue) {
             this.genes = genes;
             this.fitnessValue = fitnessValue;
         }
 
-        public int getFitnessValue() {
-            return fitnessValue;
-        }
-
-        public void setFitnessValue(int fitnessValue) {
-            this.fitnessValue = fitnessValue;
-        }
-
-        public ArrayList<Integer> getGenes() {
+        public ArrayList<Double> getGenes() {
             return genes;
         }
 
-        public void setGenes(ArrayList<Integer> genes) {
+        public void setGenes(ArrayList<Double> genes) {
             this.genes = genes;
         }
 
-        public int geneAt(int pos) {
-            return genes.get(pos);
+        public double getFitnessValue() {
+            return fitnessValue;
         }
 
-        public void setGeneAt(int pos, int value) {
-            genes.set(pos, value);
+        public void setFitnessValue(double fitnessValue) {
+            this.fitnessValue = fitnessValue;
         }
     }
 
-    static class Item {
+    static class Point {
+        private int x;
+        private int y;
 
-        private int weight;
-        private int value;
-
-        public Item(int weight, int value) {
-            this.weight = weight;
-            this.value = value;
+        public Point(int x, int y) {
+            this.x = x;
+            this.y = y;
         }
 
-        public int getWeight() {
-            return weight;
+        public void setX(int x) {
+            this.x = x;
         }
 
-        public void setWeight(int weight) {
-            this.weight = weight;
+        public void setY(int y) {
+            this.y = y;
         }
 
-        public int getValue() {
-            return value;
+        public int getX() {
+            return x;
         }
 
-        public void setValue(int value) {
-            this.value = value;
+        public int getY() {
+            return y;
         }
+
 
     }
 
