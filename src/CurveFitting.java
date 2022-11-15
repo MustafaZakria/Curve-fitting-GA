@@ -125,7 +125,7 @@ public class CurveFitting {
 
         while (selectedChromosomes.size() != 2) {
 
-            randomNumber = rand.nextInt(chromosomes.size() + 1);
+            randomNumber = rand.nextInt(chromosomes.size());
             selectedChromosomes.add(chromosomes.get(randomNumber));
 
         }
@@ -241,7 +241,7 @@ public class CurveFitting {
     }
 
     private void Replacement(ArrayList<Chromosome> oldGeneration, ArrayList<Chromosome> newGeneration) {
-
+        oldGeneration = newGeneration;
     }
 
     public void solve() {
@@ -271,13 +271,15 @@ public class CurveFitting {
 
         }
 
-//        double bestFitness = Integer.MIN_VALUE;
-//        for (Chromosome c : currentGeneration) {
-//            if (bestFitness < c.getFitnessValue()) {
-//                bestFitness = c.getFitnessValue();
-//            }
-//        }
-//        System.out.println(bestFitness);
+        double lowestError = Double.MAX_VALUE;
+        Chromosome bestChromosome = new Chromosome();
+        for (Chromosome c : currentGeneration) {
+            if (lowestError > c.getError()) {
+                lowestError = c.getError();
+                bestChromosome = c;
+            }
+        }
+        System.out.println(bestChromosome.getGenes());
 
         clearPoints();
 
@@ -286,11 +288,15 @@ public class CurveFitting {
     static class Chromosome {
 
         private ArrayList<Double> genes;
-        private double fitnessValue;
+        private double error;
 
-        public Chromosome(ArrayList<Double> genes, double fitnessValue) {
+        public Chromosome() {
+
+        }
+
+        public Chromosome(ArrayList<Double> genes, double error) {
             this.genes = genes;
-            this.fitnessValue = fitnessValue;
+            this.error = error;
         }
 
         public ArrayList<Double> getGenes() {
@@ -301,12 +307,12 @@ public class CurveFitting {
             this.genes = genes;
         }
 
-        public double getFitnessValue() {
-            return fitnessValue;
+        public double getError() {
+            return error;
         }
 
-        public void setFitnessValue(double fitnessValue) {
-            this.fitnessValue = fitnessValue;
+        public void setFitnessValue(double error) {
+            this.error = error;
         }
 
         public double getGeneAt(int pos) {
