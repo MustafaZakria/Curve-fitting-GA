@@ -121,14 +121,21 @@ public class CurveFitting {
     private ArrayList<Chromosome> Selection(ArrayList<Chromosome> chromosomes) {
 
         ArrayList<Chromosome> selectedChromosomes = new ArrayList<>();
+        ArrayList<Chromosome> compareTwoChromosomes = new ArrayList<>();
 
         int randomNumber;
 
         while (selectedChromosomes.size() != 2) {
 
             randomNumber = rand.nextInt(chromosomes.size());
-            selectedChromosomes.add(chromosomes.get(randomNumber));
-
+            compareTwoChromosomes.add(chromosomes.get(randomNumber));
+            if (compareTwoChromosomes.size() == 2) {
+                if (compareTwoChromosomes.get(0).getError() < compareTwoChromosomes.get(1).getError())
+                    selectedChromosomes.add(compareTwoChromosomes.get(0));
+                else
+                    selectedChromosomes.add(compareTwoChromosomes.get(1));
+                compareTwoChromosomes.clear();
+            }
         }
 
         return selectedChromosomes;
@@ -210,15 +217,15 @@ public class CurveFitting {
             lowerBound = getLowerBound(chromosome);
             upperBound = getUpperBound(chromosome);
 
-            Rm = rand.nextDouble() / 10;
-
             for (int i = 0; i < chromosome.getGenes().size(); i++) {
+
+                Rm = rand.nextDouble() / 10;
 
                 if (Rm <= Pm) {
 
-                    random = rand.nextDouble();
                     deltaLower = chromosome.getGeneAt(i) - lowerBound;
                     deltaUpper = upperBound - chromosome.getGeneAt(i);
+                    random = rand.nextDouble();
 
                     if (random <= 0.5)
                         y = deltaLower;
@@ -231,7 +238,6 @@ public class CurveFitting {
                         chromosome.setGeneAt(i, chromosome.getGeneAt(i) - delta);
                     else if (y == deltaUpper)
                         chromosome.setGeneAt(i, chromosome.getGeneAt(i) + delta);
-
 
                 }
 
@@ -280,6 +286,7 @@ public class CurveFitting {
                 bestChromosome = c;
             }
         }
+        System.out.println("Lower Error = " + String.format("%.10f", lowestError));
         System.out.println(bestChromosome.getGenes());
 
         clearPoints();
@@ -292,7 +299,8 @@ public class CurveFitting {
         private double error;
 
         public Chromosome() {
-
+            genes = new ArrayList<>();
+            error = 0.0;
         }
 
         public Chromosome(ArrayList<Double> genes, double error) {
