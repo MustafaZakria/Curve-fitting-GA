@@ -48,7 +48,8 @@ public class CurveFitting {
         Scanner sc = new Scanner(System.in);
         int testCases = sc.nextInt();
 
-        int numberOfPoints, degree, x, y;
+        int numberOfPoints, degree;
+        double x, y;
         ArrayList<Point> points = new ArrayList<>();
 
         for (int i = 0; i < testCases; i++) {
@@ -57,8 +58,8 @@ public class CurveFitting {
             degree = sc.nextInt();
 
             for (int j = 0; j < numberOfPoints; j++) {
-                x = sc.nextInt();
-                y = sc.nextInt();
+                x = sc.nextDouble();
+                y = sc.nextDouble();
                 points.add(new Point(x, y));
             }
 
@@ -326,31 +327,29 @@ public class CurveFitting {
     }
 
     static class Point {
-        private int x;
-        private int y;
+        private double x;
+        private double y;
 
-        public Point(int x, int y) {
+        public Point(double x, double y) {
             this.x = x;
             this.y = y;
         }
 
-        public void setX(int x) {
-            this.x = x;
-        }
-
-        public void setY(int y) {
-            this.y = y;
-        }
-
-        public int getX() {
+        public double getX() {
             return x;
         }
 
-        public int getY() {
+        public void setX(double x) {
+            this.x = x;
+        }
+
+        public double getY() {
             return y;
         }
 
-
+        public void setY(double y) {
+            this.y = y;
+        }
     }
 
 }
