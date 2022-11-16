@@ -1,8 +1,9 @@
-import java.awt.*;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Random;
+import java.util.Scanner;
 
 public class CurveFitting {
 
@@ -49,21 +50,20 @@ public class CurveFitting {
 
         Scanner scan;
         String result="";
-        File inputFile = new File("C:\\Users\\lenovo\\Desktop\\Soft computing\\Assign2-Curve-fitting-GA\\input.txt");
+        File inputFile = new File("input.txt");
         try {
             scan = new Scanner(inputFile);
 
             while (scan.hasNextDouble()) {
                 double testCases = scan.nextDouble();
-
-                double numberOfPoints, degree;
+                int numberOfPoints, degree;
                 double x, y;
                 ArrayList<Point> points = new ArrayList<>();
 
                 for (int i = 0; i < testCases; i++) {
 
-                    numberOfPoints = scan.nextDouble();
-                    degree = scan.nextDouble();
+                    numberOfPoints = scan.nextInt();
+                    degree = scan.nextInt();
 
                     for (int j = 0; j < numberOfPoints; j++) {
                         x = scan.nextDouble();
@@ -71,7 +71,7 @@ public class CurveFitting {
                         points.add(new Point(x, y));
                     }
 
-                    CurveFitting cf = new CurveFitting((int) degree, (int) numberOfPoints, points);
+                    CurveFitting cf = new CurveFitting(degree, numberOfPoints, points);
                     result += i+1 + "\n" + cf.solve() + "\n" ;
                 }
                 writeToFile(result);
@@ -133,7 +133,7 @@ public class CurveFitting {
         }
 
         clearPoints();
-        return bestChromosome.getGenes().toString() + "\t" + lowestError;
+        return "Error = " + lowestError + "\n" + bestChromosome.getGenes().toString() + "\n";
 
     }
 
@@ -267,6 +267,8 @@ public class CurveFitting {
 
             }
 
+            chromosome.setFitnessValue(calculateFitness(chromosome.getGenes()));
+
         }
 
     }
@@ -299,8 +301,8 @@ public class CurveFitting {
 
         }
         error /= numberOfPoints;
-        //return 1.0 / error;
-        return error;  //the fittest is the lowest fitness value
+
+        return error;
     }
 
     private double getLowerBound(Chromosome chromosome) {
