@@ -1,6 +1,8 @@
-import java.util.ArrayList;
-import java.util.Random;
-import java.util.Scanner;
+import java.awt.*;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.util.*;
 
 public class CurveFitting {
 
@@ -43,53 +45,99 @@ public class CurveFitting {
         points.clear();
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws FileNotFoundException {
 
-        Scanner sc = new Scanner(System.in);
-        int testCases = sc.nextInt();
+        Scanner scan;
+        String result="";
+        File inputFile = new File("C:\\Users\\lenovo\\Desktop\\Soft computing\\Assign2-Curve-fitting-GA\\input.txt");
+        try {
+            scan = new Scanner(inputFile);
 
-        int numberOfPoints, degree;
-        double x, y;
-        ArrayList<Point> points = new ArrayList<>();
+            while (scan.hasNextDouble()) {
+                double testCases = scan.nextDouble();
 
-        for (int i = 0; i < testCases; i++) {
+                double numberOfPoints, degree;
+                double x, y;
+                ArrayList<Point> points = new ArrayList<>();
 
-            numberOfPoints = sc.nextInt();
-            degree = sc.nextInt();
+                for (int i = 0; i < testCases; i++) {
 
-            for (int j = 0; j < numberOfPoints; j++) {
-                x = sc.nextDouble();
-                y = sc.nextDouble();
-                points.add(new Point(x, y));
+                    numberOfPoints = scan.nextDouble();
+                    degree = scan.nextDouble();
+
+                    for (int j = 0; j < numberOfPoints; j++) {
+                        x = scan.nextDouble();
+                        y = scan.nextDouble();
+                        points.add(new Point(x, y));
+                    }
+
+                    CurveFitting cf = new CurveFitting((int) degree, (int) numberOfPoints, points);
+                    result += i + "\n" + cf.solve() + "\n" ;
+                }
+                writeToFile(result);
+
+            }
+        } catch (FileNotFoundException e1) {
+            e1.printStackTrace();
+        }
+    }
+
+    private static void writeToFile(String string) {
+
+        File outputFile = new File("output.txt");
+        try {
+            outputFile.createNewFile();
+            FileWriter myWriter = new FileWriter("output.txt");
+            myWriter.write(string);
+            myWriter.close();
+        }
+        catch(Exception e) {
+            e.getStackTrace();
+        }
+    }
+
+    public String solve() {
+
+        int populationSize = 80;
+        int maxGeneration = 50;
+        int dependencyFactor = 2;
+        double Pc = 0.6;
+        double Pm = 0.02;
+
+        ArrayList<Chromosome> currentGeneration = InitializePopulation(populationSize);
+
+        // INSIDE A FOR LOOP FOR MAX GENERATIONS
+        for (int i = 0; i < maxGeneration; i++) {
+
+            ArrayList<Chromosome> newGeneration = new ArrayList<>();
+
+            for (int j = 0; j < populationSize / 2; j++) {
+                ArrayList<Chromosome> selectedParents = Selection(currentGeneration);
+                ArrayList<Chromosome> parentsCrossover = Crossover(selectedParents, Pc);
+                newGeneration.add(parentsCrossover.get(0));
+                newGeneration.add(parentsCrossover.get(1));
             }
 
-            CurveFitting cf = new CurveFitting(degree, numberOfPoints, points);
-            cf.solve();
+            Mutation(newGeneration, Pm, i, maxGeneration, dependencyFactor);
+            Replacement(currentGeneration, newGeneration, populationSize);
 
         }
 
-    }
-
-    private double calculateError(ArrayList<Double> chromosome) {
-
-        double error = 0.0;
-
-        for (int i = 0; i < numberOfPoints; i++) {
-
-            double fitness = 0.0;
-            for (int j = 0; j < chromosome.size(); j++) {
-                fitness += chromosome.get(j) * Math.pow(points.get(i).getX(), j);
+        double lowestError = Double.MAX_VALUE;
+        Chromosome bestChromosome = new Chromosome();
+        for (Chromosome c : currentGeneration) {
+            if (lowestError > c.getError()) {
+                lowestError = c.getError();
+                bestChromosome = c;
             }
-            fitness -= points.get(i).getY();
-            fitness = Math.pow(fitness, 2);
-
-            error += fitness;
-
         }
 
-        return 1.0 / error;
+        clearPoints();
+        String result = bestChromosome.getGenes().toString() + "\t" + lowestError;
+        return result;
 
     }
+
 
     private ArrayList<Chromosome> InitializePopulation(int populationSize) {
 
@@ -109,7 +157,7 @@ public class CurveFitting {
                 chromosome.add(random);
             }
 
-            totalChromosomes.add(new Chromosome(chromosome, calculateError(chromosome)));
+            totalChromosomes.add(new Chromosome(chromosome, calculateFitness(chromosome)));
 
         }
 
@@ -182,29 +230,6 @@ public class CurveFitting {
 
     }
 
-    private double getLowerBound(Chromosome chromosome) {
-
-        double lower = Double.MAX_VALUE;
-        for (int i = 0; i < chromosome.getGenes().size(); i++) {
-            if (lower > chromosome.getGeneAt(i)) {
-                lower = chromosome.getGeneAt(i);
-            }
-        }
-        return lower;
-
-    }
-
-    private double getUpperBound(Chromosome chromosome) {
-
-        double upper = Double.MIN_VALUE;
-        for (int i = 0; i < chromosome.getGenes().size(); i++) {
-            if (upper < chromosome.getGeneAt(i)) {
-                upper = chromosome.getGeneAt(i);
-            }
-        }
-        return upper;
-
-    }
 
     private void Mutation(ArrayList<Chromosome> totalChromosomes, double Pm, int currentGeneration, int maxGeneration, int dependencyFactor) {
 
@@ -232,7 +257,7 @@ public class CurveFitting {
                     else
                         y = deltaUpper;
 
-                    delta = y * (Math.pow(1 - random, Math.pow(1 - (double)currentGeneration/maxGeneration, dependencyFactor)));
+                    delta = y * (Math.pow(1 - random, Math.pow(1 - (double) currentGeneration / maxGeneration, dependencyFactor)));
 
                     if (y == deltaLower)
                         chromosome.setGeneAt(i, chromosome.getGeneAt(i) - delta);
@@ -247,49 +272,59 @@ public class CurveFitting {
 
     }
 
-    private void Replacement(ArrayList<Chromosome> oldGeneration, ArrayList<Chromosome> newGeneration) {
-        oldGeneration = newGeneration;
+    private void Replacement(ArrayList<Chromosome> oldGeneration, ArrayList<Chromosome> newGeneration, int popSize) {
+        ArrayList<Chromosome> twoGenerations = new ArrayList<>();
+        twoGenerations.addAll(oldGeneration);
+        twoGenerations.addAll(newGeneration);
+        twoGenerations.sort((o1, o2) -> Double.compare(o2.getError(), o1.getError()));
+        for (int i = 0; i < popSize; i++) {
+            oldGeneration.set(i, twoGenerations.get(twoGenerations.size() - 1 - i));
+//            System.out.println(oldGeneration.get(i).getError());
+        }
     }
 
-    public void solve() {
+    private double calculateFitness(ArrayList<Double> chromosome) {
 
-        int populationSize = 20;
-        int maxGeneration = 10;
-        int dependencyFactor = 2;
-        double Pc = 0.6;
-        double Pm = 0.02;
+        double error = 0.0;
 
-        ArrayList<Chromosome> currentGeneration = InitializePopulation(populationSize);
+        for (int i = 0; i < numberOfPoints; i++) {
 
-        // INSIDE A FOR LOOP FOR MAX GENERATIONS
-        for (int i = 0; i < maxGeneration; i++) {
-
-            ArrayList<Chromosome> newGeneration = new ArrayList<>();
-
-            for (int j = 0; j < populationSize / 2; j++) {
-                ArrayList<Chromosome> selectedParents = Selection(currentGeneration);
-                ArrayList<Chromosome> parentsCrossover = Crossover(selectedParents, Pc);
-                newGeneration.add(parentsCrossover.get(0));
-                newGeneration.add(parentsCrossover.get(1));
+            double fitness = 0.0;
+            for (int j = 0; j < chromosome.size(); j++) {
+                fitness += chromosome.get(j) * Math.pow(points.get(i).getX(), j);
             }
+            fitness -= points.get(i).getY();
+            fitness = Math.pow(fitness, 2);
 
-            Mutation(newGeneration, Pm, i, maxGeneration, dependencyFactor);
-            Replacement(currentGeneration, newGeneration);
+            error += fitness;
 
         }
+        error /= numberOfPoints;
+        //return 1.0 / error;
+        return error;  //the fittest is the lowest fitness value
+    }
 
-        double lowestError = Double.MAX_VALUE;
-        Chromosome bestChromosome = new Chromosome();
-        for (Chromosome c : currentGeneration) {
-            if (lowestError > c.getError()) {
-                lowestError = c.getError();
-                bestChromosome = c;
+    private double getLowerBound(Chromosome chromosome) {
+
+        double lower = Double.MAX_VALUE;
+        for (int i = 0; i < chromosome.getGenes().size(); i++) {
+            if (lower > chromosome.getGeneAt(i)) {
+                lower = chromosome.getGeneAt(i);
             }
         }
-        System.out.println("Lower Error = " + String.format("%.10f", lowestError));
-        System.out.println(bestChromosome.getGenes());
+        return lower;
 
-        clearPoints();
+    }
+
+    private double getUpperBound(Chromosome chromosome) {
+
+        double upper = Double.MIN_VALUE;
+        for (int i = 0; i < chromosome.getGenes().size(); i++) {
+            if (upper < chromosome.getGeneAt(i)) {
+                upper = chromosome.getGeneAt(i);
+            }
+        }
+        return upper;
 
     }
 
