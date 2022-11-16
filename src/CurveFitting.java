@@ -216,11 +216,10 @@ public class CurveFitting {
                 secondPoint = temp;
             }
 
-            Chromosome tempSelected = afterCrossover.get(0);
-
             for (int i = firstPoint; i < secondPoint; i++) {
+                double temp = afterCrossover.get(0).getGeneAt(i);
                 afterCrossover.get(0).setGeneAt(i, afterCrossover.get(1).getGeneAt(i));
-                afterCrossover.get(1).setGeneAt(i, tempSelected.getGeneAt(i));
+                afterCrossover.get(1).setGeneAt(i, temp);
             }
 
         }
