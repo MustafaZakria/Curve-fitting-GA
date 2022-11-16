@@ -72,7 +72,7 @@ public class CurveFitting {
                     }
 
                     CurveFitting cf = new CurveFitting((int) degree, (int) numberOfPoints, points);
-                    result += i + "\n" + cf.solve() + "\n" ;
+                    result += i+1 + "\n" + cf.solve() + "\n" ;
                 }
                 writeToFile(result);
 
@@ -133,8 +133,7 @@ public class CurveFitting {
         }
 
         clearPoints();
-        String result = bestChromosome.getGenes().toString() + "\t" + lowestError;
-        return result;
+        return bestChromosome.getGenes().toString() + "\t" + lowestError;
 
     }
 
